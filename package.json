@@ -35,7 +35,9 @@
     "test-node": "npm run test-unit && npm run test-cli && npm run test-regression",
     "test-regression": "nodeunit tests/regression",
     "test-unit": "nodeunit tests/unit",
-    "test": "npm run test-node && npm run test-browser"
+    "test": "npm run test-node && npm run test-browser",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "main": "./src/jshint.js",
   "dependencies": {
@@ -46,7 +48,8 @@
     "lodash": "~4.17.11",
     "minimatch": "~3.0.2",
     "shelljs": "0.3.x",
-    "strip-json-comments": "1.0.x"
+    "strip-json-comments": "1.0.x",
+    "snyk": "^1.319.1"
   },
   "devDependencies": {
     "async": "~2.1.2",
@@ -74,5 +77,6 @@
     "data",
     "dist",
     "src"
-  ]
+  ],
+  "snyk": true
 }
