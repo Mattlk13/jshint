@@ -311,6 +311,7 @@ exports.notypeof = function (test) {
     .addError(3, 17, "Invalid typeof value 'bool'")
     .addError(4, 11, "Invalid typeof value 'obj'")
     .addError(13, 17, "Invalid typeof value 'symbol'")
+    .addError(14, 21, "'BigInt' is only available in ES11 (use 'esversion: 11').")
     .test(src);
 
   TestRun(test)
@@ -318,7 +319,15 @@ exports.notypeof = function (test) {
     .addError(2, 14, "Invalid typeof value 'double'")
     .addError(3, 17, "Invalid typeof value 'bool'")
     .addError(4, 11, "Invalid typeof value 'obj'")
+    .addError(14, 21, "'BigInt' is only available in ES11 (use 'esversion: 11').")
     .test(src, { esnext: true });
+
+  TestRun(test)
+    .addError(1, 17, "Invalid typeof value 'funtion'")
+    .addError(2, 14, "Invalid typeof value 'double'")
+    .addError(3, 17, "Invalid typeof value 'bool'")
+    .addError(4, 11, "Invalid typeof value 'obj'")
+    .test(src, { esversion: 11 });
 
   TestRun(test)
     .test(src, { notypeof: true });
@@ -565,17 +574,13 @@ exports.asi = function (test) {
     .addError(2, 13, "Missing semicolon.")
     .addError(4, 21, "Missing semicolon.")
     .addError(5, 14, "Missing semicolon.")
-    .addError(9, 18, "Line breaking error 'continue'.")
     .addError(9, 26, "Missing semicolon.")
     .addError(10, 14, "Missing semicolon.")
-    .addError(11, 18, "Line breaking error 'break'.")
     .addError(11, 23, "Missing semicolon.")
     .addError(12, 14, "Missing semicolon.")
     .addError(16, 23, "Missing semicolon.")
     .addError(17, 19, "Missing semicolon.")
-    .addError(19, 13, "Line breaking error 'break'.")
     .addError(19, 18, "Missing semicolon.")
-    .addError(21, 13, "Line breaking error 'break'.")
     .addError(21, 18, "Missing semicolon.")
     .addError(25, 6, "Missing semicolon.")
     .addError(26, 10, "Missing semicolon.")
@@ -1668,20 +1673,20 @@ exports.boss = function (test) {
 
   // By default, warn about suspicious assignments
   TestRun(test)
-    .addError(1, 10, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(4, 24, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(7, 27, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(12, 24, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(1, 7, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(4, 12, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(7, 15, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(12, 12, 'Expected a conditional expression and instead saw an assignment.')
 
     // GH-657
-    .addError(14, 11, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(17, 25, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(20, 28, 'Expected a conditional expression and instead saw an assignment.')
-    .addError(25, 25, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(14, 7, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(17, 12, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(20, 15, 'Expected a conditional expression and instead saw an assignment.')
+    .addError(25, 12, 'Expected a conditional expression and instead saw an assignment.')
 
     // GH-670
-    .addError(28, 13, "Did you mean to return a conditional instead of an assignment?")
-    .addError(32, 15, "Did you mean to return a conditional instead of an assignment?")
+    .addError(28, 12, "Did you mean to return a conditional instead of an assignment?")
+    .addError(32, 14, "Did you mean to return a conditional instead of an assignment?")
     .test(src, {es3: true});
 
   // But if you are the boss, all is good
@@ -2040,6 +2045,19 @@ exports.strict = function (test) {
   TestRun(test, "gh-2668")
     .addError(1, 6, "Missing \"use strict\" statement.")
     .test("a = 2;", { strict: "global" });
+
+  TestRun(test, "Warning location, missing semicolon (gh-3528)")
+    .addError(1, 1, "Use the function form of \"use strict\".")
+    .addError(1, 13, "Missing semicolon.")
+    .test("'use strict'\n");
+
+  TestRun(test, "Warning location among other directives")
+    .addError(2, 1, "Use the function form of \"use strict\".")
+    .test([
+      "'use another-directive';",
+      "'use strict';",
+      "'use a-third-directive';"
+    ]);
 
   test.done();
 };
@@ -2720,6 +2738,8 @@ exports.maxcomplexity = function (test) {
     .addError(47, 44, "This function's cyclomatic complexity is too high. (8)")
     .addError(76, 66, "This function's cyclomatic complexity is too high. (2)")
     .addError(80, 60, "This function's cyclomatic complexity is too high. (2)")
+    .addError(84, 61, "This function's cyclomatic complexity is too high. (2)")
+    .addError(88, 68, "This function's cyclomatic complexity is too high. (2)")
     .test(src, { es3: true, maxcomplexity: 1 });
 
   TestRun(test)
@@ -2727,6 +2747,12 @@ exports.maxcomplexity = function (test) {
 
   TestRun(test)
     .test(src, { es3: true });
+
+  TestRun(test, "nullish coalescing operator")
+    .addError(1, 11, "This function's cyclomatic complexity is too high. (2)")
+    .test([
+      "function f() { 0 ?? 0; }"
+    ], { esversion: 11, expr: true, maxcomplexity: 1 });
 
   test.done();
 };
@@ -2846,7 +2872,7 @@ exports.nocomma = function (test) {
     .test("return 2, 5;", {});
 
   TestRun(test, "nocomma main case")
-    .addError(1, 11, "Unexpected use of a comma operator.")
+    .addError(1, 9, "Unexpected use of a comma operator.")
     .test("return 2, 5;", { nocomma: true });
 
   TestRun(test, "nocomma in an expression")
@@ -3662,6 +3688,50 @@ singleGroups.destructuringAssign = function (test) {
   test.done();
 };
 
+singleGroups.nullishCoalescing = function (test) {
+  TestRun(test)
+    .addError(1, 1, "Unnecessary grouping operator.")
+    .addError(2, 6, "Unnecessary grouping operator.")
+    .test([
+      "(0) ?? 0;",
+      "0 ?? (0);"
+    ], { singleGroups: true, expr: true, esversion: 11 });
+
+  TestRun(test)
+    .test([
+      "0 ?? (0 || 0);",
+      "(0 ?? 0) || 0;",
+      "0 ?? (0 && 0);",
+      "(0 ?? 0) && 0;"
+    ], { singleGroups: true, expr: true, esversion: 11 });
+
+  test.done();
+};
+
+singleGroups.optionalChaining = function (test) {
+  var code = [
+    "new ({}?.constructor)();",
+    "({}?.toString)``;",
+    // Invalid forms:
+    "([])?.x;",
+    "([]?.x).x;",
+    "([]?.x)?.x;"
+  ];
+
+  TestRun(test)
+    .addError(1, 21, "Bad constructor.")
+    .addError(2, 15, "Expected an assignment or function call and instead saw an expression.")
+    .addError(3, 1, "Unnecessary grouping operator.")
+    .addError(3, 7, "Expected an assignment or function call and instead saw an expression.")
+    .addError(4, 1, "Unnecessary grouping operator.")
+    .addError(4, 9, "Expected an assignment or function call and instead saw an expression.")
+    .addError(5, 1, "Unnecessary grouping operator.")
+    .addError(5, 10, "Expected an assignment or function call and instead saw an expression.")
+    .test(code, { singleGroups: true, esversion: 11 });
+
+  test.done();
+};
+
 exports.elision = function (test) {
   var code = [
     "var a = [1,,2];",
@@ -4229,13 +4299,17 @@ exports.esversion = function(test) {
     "// jshint esversion: 9",
     "// jshint esversion: 2018",
     "// jshint esversion: 10",
-    "// jshint esversion: 2019"
+    "// jshint esversion: 2019",
+    "// jshint esversion: 11",
+    "// jshint esversion: 2020",
+    "// jshint esversion: 12",
+    "// jshint esversion: 2021"
   ];
 
   TestRun(test, "Value")
     .addError(2, 1, "Bad option value.")
-    .addError(12, 1, "Bad option value.")
-    .addError(13, 1, "Bad option value.")
+    .addError(16, 1, "Bad option value.")
+    .addError(17, 1, "Bad option value.")
     .test(code);
 
   var es5code = [
